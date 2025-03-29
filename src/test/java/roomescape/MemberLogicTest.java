@@ -2,7 +2,8 @@ package roomescape;
 
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
@@ -13,11 +14,8 @@ import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import roomescape.exception.CreateMemberFailException;
 import roomescape.member.dto.MemberRequest;
@@ -45,18 +43,16 @@ public class MemberLogicTest {
         memberRequest.put("password", "password");
 
         // when
-        ExtractableResponse<Response> response = RestAssured.given().log().all()
+        RestAssured.given().log().all()
                 .body(memberRequest)
                 .contentType(ContentType.JSON)
                 .post("/members")
                 .then().log().all()
-                .extract();
+                .statusCode(201)
+                .body("id", notNullValue())
+                .body("name", is("Doyo"))
+                .body("email", is("member@example.com"));
 
-        // then
-        assertThat(response.statusCode()).isEqualTo(201);
-        assertThat(response.jsonPath().getString("id")).isNotNull();
-        assertThat(response.jsonPath().getString("name")).isEqualTo("Doyo");
-        assertThat(response.jsonPath().getString("email")).isEqualTo("member@example.com");
     }
 
     @Test
